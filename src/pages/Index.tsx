@@ -23,6 +23,33 @@ const Index = () => {
   const canCheck = selectedLang && codeText.trim().length > 0 && !loadingCheck;
   const canSubmit = uniquenessResult && uniquenessResult.uniqueness_percent > 35 && !loadingSubmit;
 
+  const clearAll = () => {
+    setCodeText("");
+    setUniquenessResult(null);
+    setNearestCode(null);
+    setError(null);
+    // Focus the editor after clearing
+    requestAnimationFrame(() => {
+      const textarea = document.querySelector('textarea');
+      textarea?.focus();
+    });
+  };
+
+  // Keyboard shortcut handler
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if ((event.ctrlKey || event.metaKey) && event.key === 'k') {
+        event.preventDefault();
+        if (uniquenessResult) {
+          clearAll();
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [uniquenessResult]);
+
   const handleCheckUniqueness = async () => {
     if (!canCheck) return;
 
@@ -172,6 +199,7 @@ const Index = () => {
                 nearestCode={nearestCode}
                 loading={loadingCheck}
                 error={error}
+                onClear={clearAll}
               />
             </CardContent>
           </Card>

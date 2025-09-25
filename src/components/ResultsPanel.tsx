@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
-import { Copy, Check, ExternalLink, AlertCircle, CheckCircle, AlertTriangle } from 'lucide-react';
+import { Copy, Check, ExternalLink, AlertCircle, CheckCircle, AlertTriangle, X } from 'lucide-react';
 import { UniquenessResponse, CodeRecord } from '@/types/api';
 import { useToast } from '@/hooks/use-toast';
 
@@ -12,9 +12,10 @@ interface ResultsPanelProps {
   nearestCode: CodeRecord | null;
   loading: boolean;
   error: string | null;
+  onClear?: () => void;
 }
 
-export const ResultsPanel = ({ result, nearestCode, loading, error }: ResultsPanelProps) => {
+export const ResultsPanel = ({ result, nearestCode, loading, error, onClear }: ResultsPanelProps) => {
   const [copiedId, setCopiedId] = useState(false);
   const [copiedCode, setCopiedCode] = useState(false);
   const { toast } = useToast();
@@ -125,9 +126,23 @@ export const ResultsPanel = ({ result, nearestCode, loading, error }: ResultsPan
   return (
     <div className="flex flex-col h-full gap-4">
       {/* Results Header */}
-      <div className="flex items-center gap-2">
-        {getUniquenessIcon(uniquenessPercent)}
-        <span className="text-sm font-medium">Analysis Results</span>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          {getUniquenessIcon(uniquenessPercent)}
+          <span className="text-sm font-medium">Analysis Results</span>
+        </div>
+        {onClear && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onClear}
+            className="h-8 px-3 text-muted-foreground hover:text-foreground"
+            aria-label="Clear results and editor"
+          >
+            <X className="h-4 w-4 mr-1" />
+            Clear
+          </Button>
+        )}
       </div>
 
       {/* Uniqueness Score */}
