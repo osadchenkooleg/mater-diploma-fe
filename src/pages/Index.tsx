@@ -6,15 +6,15 @@ import { Search, Send, Loader2 } from 'lucide-react';
 import { LanguageSelector } from '@/components/LanguageSelector';
 import { CodeInput } from '@/components/CodeInput';
 import { ResultsPanel } from '@/components/ResultsPanel';
-import { api, ApiError } from '@/lib/api';
-import { UniquenessResponse, CodeResponse } from '@/types/api';
+import { checkUniqueness, getCode, saveCode, ApiError } from '@/lib/api';
+import { UniquenessResponse, CodeRecord } from '@/types/api';
 import { useToast } from '@/hooks/use-toast';
 
 const Index = () => {
   const [selectedLang, setSelectedLang] = useState('');
   const [codeText, setCodeText] = useState('');
   const [uniquenessResult, setUniquenessResult] = useState<UniquenessResponse | null>(null);
-  const [nearestCode, setNearestCode] = useState<CodeResponse | null>(null);
+  const [nearestCode, setNearestCode] = useState<CodeRecord | null>(null);
   const [loadingCheck, setLoadingCheck] = useState(false);
   const [loadingSubmit, setLoadingSubmit] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -32,13 +32,13 @@ const Index = () => {
     setNearestCode(null);
 
     try {
-      const result = await api.checkUniqueness(selectedLang, codeText.trim());
+      const result = await checkUniqueness(codeText.trim(), [selectedLang]);
       setUniquenessResult(result);
 
       // Fetch nearest code if available
       if (result.closest_id) {
         try {
-          const nearest = await api.getCode(result.closest_id);
+          const nearest = await getCode(result.closest_id);
           setNearestCode(nearest);
         } catch (err) {
           console.error('Failed to fetch nearest code:', err);
@@ -71,7 +71,7 @@ const Index = () => {
     setLoadingSubmit(true);
 
     try {
-      const result = await api.submitCode(selectedLang, codeText.trim());
+      const result = await saveCode(selectedLang, codeText.trim());
       toast({
         title: "Code submitted successfully",
         description: (

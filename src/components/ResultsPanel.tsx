@@ -4,12 +4,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Copy, Check, ExternalLink, AlertCircle, CheckCircle, AlertTriangle } from 'lucide-react';
-import { UniquenessResponse, CodeResponse } from '@/types/api';
+import { UniquenessResponse, CodeRecord } from '@/types/api';
 import { useToast } from '@/hooks/use-toast';
 
 interface ResultsPanelProps {
   result: UniquenessResponse | null;
-  nearestCode: CodeResponse | null;
+  nearestCode: CodeRecord | null;
   loading: boolean;
   error: string | null;
 }

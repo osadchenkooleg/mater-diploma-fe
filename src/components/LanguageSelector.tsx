@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { api } from '@/lib/api';
+import { getLanguages } from '@/lib/api';
 import { Code } from 'lucide-react';
 
 interface LanguageSelectorProps {
@@ -16,7 +16,7 @@ export const LanguageSelector = ({ value, onChange, disabled }: LanguageSelector
   useEffect(() => {
     const loadLanguages = async () => {
       try {
-        const langs = await api.getLanguages();
+        const langs = await getLanguages();
         setLanguages(langs);
         if (!value && langs.length > 0) {
           onChange(langs[0]);
