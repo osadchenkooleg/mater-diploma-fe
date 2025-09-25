@@ -1,4 +1,6 @@
-export type Language = string;
+export interface LangItem { 
+  lang: string;
+}
 
 export interface UniquenessResponse {
   uniqueness_percent: number;
@@ -8,13 +10,13 @@ export interface UniquenessResponse {
 }
 
 export interface CodeRecord {
-  id: string;
-  lang: string;
-  split?: string;
-  label?: string;
-  code: string;
+  id?: string;
   code_id?: string;
   old_id?: string;
+  lang?: string;
+  split?: string;
+  label?: string;
+  code?: string;
 }
 
 export interface SubmissionResponse {

@@ -6,7 +6,7 @@ import { Search, Send, Loader2 } from 'lucide-react';
 import { LanguageSelector } from '@/components/LanguageSelector';
 import { CodeInput } from '@/components/CodeInput';
 import { ResultsPanel } from '@/components/ResultsPanel';
-import { checkUniqueness, getCode, saveCode, ApiError } from '@/lib/api';
+import { checkUniquenessFromText, getCodeById, saveCodeFromText, ApiError } from '@/lib/api';
 import { UniquenessResponse, CodeRecord } from '@/types/api';
 import { useToast } from '@/hooks/use-toast';
 
@@ -32,13 +32,13 @@ const Index = () => {
     setNearestCode(null);
 
     try {
-      const result = await checkUniqueness(codeText.trim(), [selectedLang]);
+      const result = await checkUniquenessFromText(codeText.trim(), selectedLang);
       setUniquenessResult(result);
 
       // Fetch nearest code if available
       if (result.closest_id) {
         try {
-          const nearest = await getCode(result.closest_id);
+          const nearest = await getCodeById(result.closest_id);
           setNearestCode(nearest);
         } catch (err) {
           console.error('Failed to fetch nearest code:', err);
@@ -71,7 +71,7 @@ const Index = () => {
     setLoadingSubmit(true);
 
     try {
-      const result = await saveCode(selectedLang, codeText.trim());
+      const result = await saveCodeFromText(selectedLang, codeText.trim());
       toast({
         title: "Code submitted successfully",
         description: (
