@@ -178,9 +178,10 @@ const Index = () => {
 
       {/* Main Content */}
       <main className="container mx-auto px-6 py-6">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-[calc(100vh-200px)]">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-[calc(100vh-200px)]">
           {/* Left Panel - Code Input */}
-          <Card className="bg-gradient-card border-border shadow-card">
+          <section className="lg:col-span-7">
+            <Card className="bg-gradient-card border-border shadow-card h-full">
             <CardContent className="p-6 h-full">
               <CodeInput
                 value={codeText}
@@ -189,20 +190,19 @@ const Index = () => {
                 placeholder={`Paste your ${selectedLang || 'code'} here or upload a file...`}
               />
             </CardContent>
-          </Card>
+            </Card>
+          </section>
 
           {/* Right Panel - Results */}
-          <Card className="bg-gradient-card border-border shadow-card">
-            <CardContent className="p-6 h-full">
-              <ResultsPanel
-                result={uniquenessResult}
-                nearestCode={nearestCode}
-                loading={loadingCheck}
-                error={error}
-                onClear={clearAll}
-              />
-            </CardContent>
-          </Card>
+          <aside className="lg:col-span-5">
+            <ResultsPanel
+              result={uniquenessResult}
+              nearestCode={nearestCode}
+              loading={loadingCheck}
+              error={error}
+              onClear={clearAll}
+            />
+          </aside>
         </div>
 
         {/* Submit Button */}

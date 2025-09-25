@@ -63,11 +63,13 @@ export const ResultsPanel = ({ result, nearestCode, loading, error, onClear }: R
 
   if (loading) {
     return (
-      <div className="flex flex-col h-full">
-        <div className="flex items-center gap-2 mb-3">
-          <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-          <span className="text-sm font-medium">Analyzing Code...</span>
-        </div>
+      <div className="h-[calc(100vh-160px)] flex flex-col">
+        <header className="shrink-0 flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+            <span className="text-sm font-medium">Analyzing Code...</span>
+          </div>
+        </header>
         <Card className="flex-1 bg-gradient-card border-border animate-pulse">
           <CardContent className="p-6 flex items-center justify-center">
             <div className="text-center text-muted-foreground">
@@ -82,11 +84,13 @@ export const ResultsPanel = ({ result, nearestCode, loading, error, onClear }: R
 
   if (error) {
     return (
-      <div className="flex flex-col h-full">
-        <div className="flex items-center gap-2 mb-3">
-          <AlertCircle className="h-4 w-4 text-destructive" />
-          <span className="text-sm font-medium text-destructive">Analysis Failed</span>
-        </div>
+      <div className="h-[calc(100vh-160px)] flex flex-col">
+        <header className="shrink-0 flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <AlertCircle className="h-4 w-4 text-destructive" />
+            <span className="text-sm font-medium text-destructive">Analysis Failed</span>
+          </div>
+        </header>
         <Card className="flex-1 bg-gradient-card border-destructive/20">
           <CardContent className="p-6 flex items-center justify-center">
             <div className="text-center">
@@ -102,11 +106,13 @@ export const ResultsPanel = ({ result, nearestCode, loading, error, onClear }: R
 
   if (!result) {
     return (
-      <div className="flex flex-col h-full">
-        <div className="flex items-center gap-2 mb-3">
-          <ExternalLink className="h-4 w-4 text-muted-foreground" />
-          <span className="text-sm font-medium text-muted-foreground">Results Panel</span>
-        </div>
+      <div className="h-[calc(100vh-160px)] flex flex-col">
+        <header className="shrink-0 flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <ExternalLink className="h-4 w-4 text-muted-foreground" />
+            <span className="text-lg font-semibold text-muted-foreground">Analysis Results</span>
+          </div>
+        </header>
         <Card className="flex-1 bg-gradient-card border-border">
           <CardContent className="p-6 flex items-center justify-center">
             <div className="text-center text-muted-foreground">
@@ -124,12 +130,12 @@ export const ResultsPanel = ({ result, nearestCode, loading, error, onClear }: R
   const similarityPercent = Math.round(result.similarity * 10000) / 100;
 
   return (
-    <div className="flex flex-col h-full gap-4">
+    <div className="h-[calc(100vh-160px)] flex flex-col">
       {/* Results Header */}
-      <div className="flex items-center justify-between">
+      <header className="shrink-0 flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           {getUniquenessIcon(uniquenessPercent)}
-          <span className="text-sm font-medium">Analysis Results</span>
+          <span className="text-lg font-semibold">Analysis Results</span>
         </div>
         {onClear && (
           <Button
@@ -143,80 +149,89 @@ export const ResultsPanel = ({ result, nearestCode, loading, error, onClear }: R
             Clear
           </Button>
         )}
-      </div>
+      </header>
 
-      {/* Uniqueness Score */}
-      <Card className="bg-gradient-card border-border shadow-card">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base flex items-center justify-between">
-            Uniqueness Score
-            <Badge variant={getUniquenessVariant(uniquenessPercent)} className={getUniquenessColor(uniquenessPercent)}>
-              {uniquenessPercent.toFixed(1)}%
-            </Badge>
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="pt-0">
-          <div className="flex justify-between text-sm text-muted-foreground">
-            <span>Similarity: {similarityPercent.toFixed(2)}%</span>
-            <span className={uniquenessPercent > 35 ? 'text-success' : 'text-destructive'}>
-              {uniquenessPercent > 35 ? 'Submittable' : 'Too similar'}
-            </span>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Nearest Match */}
-      {result.closest_id && nearestCode ? (
-        <Card className="flex-1 bg-gradient-card border-border shadow-card">
+      <div className="flex-1 overflow-auto space-y-4">
+        {/* Uniqueness Score */}
+        <Card className="shrink-0 bg-gradient-card border-border shadow-card">
           <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-base">Nearest Match</CardTitle>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => copyToClipboard(result.closest_id!, 'id')}
-                className="h-8 px-2"
-              >
-                {copiedId ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
-              </Button>
-            </div>
-            <div className="flex gap-2 text-xs text-muted-foreground">
-              <Badge variant="outline" className="text-xs">
-                {nearestCode.lang}
+            <CardTitle className="text-base flex items-center justify-between">
+              Uniqueness Score
+              <Badge variant={getUniquenessVariant(uniquenessPercent)} className={getUniquenessColor(uniquenessPercent)}>
+                {uniquenessPercent.toFixed(1)}%
               </Badge>
-              <span>ID: {result.closest_id.slice(0, 8)}...</span>
-            </div>
+            </CardTitle>
           </CardHeader>
-          <CardContent className="pt-0 flex flex-col flex-1">
-            <div className="flex-1 relative">
-              <Textarea
-                value={nearestCode.code}
-                readOnly
-                className="h-full min-h-0 font-mono text-xs bg-code-bg border-code-border resize-none"
-                style={{ minHeight: '200px' }}
-              />
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => copyToClipboard(nearestCode.code, 'code')}
-                className="absolute top-2 right-2 h-8 px-2 bg-secondary/80 hover:bg-secondary"
-              >
-                {copiedCode ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
-              </Button>
+          <CardContent className="pt-0">
+            <div className="flex justify-between text-sm text-muted-foreground">
+              <span>Similarity: {similarityPercent.toFixed(2)}%</span>
+              <span className={uniquenessPercent > 35 ? 'text-success' : 'text-destructive'}>
+                {uniquenessPercent > 35 ? 'Submittable' : 'Too similar'}
+              </span>
             </div>
           </CardContent>
         </Card>
-      ) : result.closest_id === null ? (
-        <Card className="flex-1 bg-gradient-card border-border shadow-card">
-          <CardContent className="p-6 flex items-center justify-center">
-            <div className="text-center text-muted-foreground">
-              <CheckCircle className="h-12 w-12 mx-auto mb-4 text-success" />
-              <p className="font-medium mb-2 text-success">No similar code found</p>
-              <p className="text-sm">Your code appears to be completely unique!</p>
-            </div>
-          </CardContent>
-        </Card>
-      ) : null}
+
+        {/* Nearest Match */}
+        {result.closest_id && nearestCode ? (
+          <Card className="bg-gradient-card border-border shadow-card">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-base">Nearest Match</CardTitle>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => copyToClipboard(result.closest_id!, 'id')}
+                  className="h-8 px-2"
+                  aria-label="Copy code ID"
+                >
+                  {copiedId ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+                </Button>
+              </div>
+              <div className="flex gap-2 text-xs text-muted-foreground">
+                <Badge variant="outline" className="text-xs">
+                  {nearestCode.lang}
+                </Badge>
+                <span>ID: {result.closest_id.slice(0, 8)}...</span>
+              </div>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <div className="relative">
+                <pre
+                  className="
+                    bg-neutral-900 rounded-xl p-4
+                    min-h-[360px] max-h-[60vh]
+                    overflow-auto leading-6 text-sm
+                    font-mono text-neutral-100
+                  "
+                  aria-label="Nearest match code"
+                >
+                  <code>{nearestCode.code || ''}</code>
+                </pre>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => copyToClipboard(nearestCode.code || '', 'code')}
+                  className="absolute top-3 right-3 h-8 px-2 bg-secondary/80 hover:bg-secondary"
+                  aria-label="Copy nearest match code"
+                >
+                  {copiedCode ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        ) : result.closest_id === null ? (
+          <Card className="bg-gradient-card border-border shadow-card">
+            <CardContent className="p-6 flex items-center justify-center">
+              <div className="text-center text-muted-foreground">
+                <CheckCircle className="h-12 w-12 mx-auto mb-4 text-success" />
+                <p className="font-medium mb-2 text-success">No similar code found</p>
+                <p className="text-sm">Your code appears to be completely unique!</p>
+              </div>
+            </CardContent>
+          </Card>
+        ) : null}
+      </div>
     </div>
   );
 };
