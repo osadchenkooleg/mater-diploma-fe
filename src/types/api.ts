@@ -22,3 +22,9 @@ export interface CodeRecord {
 export interface SubmissionResponse {
   id: string;
 }
+
+export interface ThresholdsResponse {
+  t_low: number;
+  t_high: number;
+  created_at: string;
+}
