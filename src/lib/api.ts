@@ -1,4 +1,4 @@
-import { LangItem, UniquenessResponse, CodeRecord, SubmissionResponse } from '@/types/api';
+import { LangItem, UniquenessResponse, CodeRecord, SubmissionResponse, ThresholdsResponse } from '@/types/api';
 
 const BASE = import.meta.env.VITE_API_BASE_URL ?? '/';
 const toUrl = (p: string) => new URL(p, BASE).toString();
@@ -73,6 +73,17 @@ export async function saveCodeFromText(lang: string, text: string): Promise<Subm
   if (!response.ok) {
     const errorText = await response.text();
     throw new ApiError(response.status, errorText || 'Failed to submit code');
+  }
+
+  return await response.json();
+}
+
+export async function getCurrentThresholds(): Promise<ThresholdsResponse> {
+  const response = await fetch(toUrl('/thresholds/current'));
+  
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new ApiError(response.status, errorText || 'Failed to load thresholds');
   }
 
   return await response.json();

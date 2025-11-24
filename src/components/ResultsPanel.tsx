@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Copy, Check, ExternalLink, AlertCircle, CheckCircle, AlertTriangle, X } from 'lucide-react';
-import { UniquenessResponse, CodeRecord } from '@/types/api';
+import { UniquenessResponse, CodeRecord, ThresholdsResponse } from '@/types/api';
 import { useToast } from '@/hooks/use-toast';
 
 interface ResultsPanelProps {
@@ -13,9 +13,11 @@ interface ResultsPanelProps {
   loading: boolean;
   error: string | null;
   onClear?: () => void;
+  thresholds: ThresholdsResponse | null;
+  codeChanged?: boolean;
 }
 
-export const ResultsPanel = ({ result, nearestCode, loading, error, onClear }: ResultsPanelProps) => {
+export const ResultsPanel = ({ result, nearestCode, loading, error, onClear, thresholds, codeChanged }: ResultsPanelProps) => {
   const [copiedId, setCopiedId] = useState(false);
   const [copiedCode, setCopiedCode] = useState(false);
   const { toast } = useToast();
@@ -43,22 +45,37 @@ export const ResultsPanel = ({ result, nearestCode, loading, error, onClear }: R
     }
   };
 
-  const getUniquenessColor = (percent: number) => {
-    if (percent >= 70) return 'text-success';
-    if (percent >= 35) return 'text-warning';
+  // Calculate state based on thresholds
+  const getDecisionState = (value: number): 'green' | 'yellow' | 'red' => {
+    if (!thresholds) return 'red';
+    const normalizedValue = value / 100; // Convert to 0-1 scale
+    if (normalizedValue >= thresholds.t_high) return 'green';
+    if (normalizedValue > thresholds.t_low) return 'yellow';
+    return 'red';
+  };
+
+  const getUniquenessColor = (state: 'green' | 'yellow' | 'red') => {
+    if (state === 'green') return 'text-success';
+    if (state === 'yellow') return 'text-warning';
     return 'text-destructive';
   };
 
-  const getUniquenessIcon = (percent: number) => {
-    if (percent >= 70) return <CheckCircle className="h-4 w-4" />;
-    if (percent >= 35) return <AlertTriangle className="h-4 w-4" />;
+  const getUniquenessIcon = (state: 'green' | 'yellow' | 'red') => {
+    if (state === 'green') return <CheckCircle className="h-4 w-4" />;
+    if (state === 'yellow') return <AlertTriangle className="h-4 w-4" />;
     return <AlertCircle className="h-4 w-4" />;
   };
 
-  const getUniquenessVariant = (percent: number): "default" | "secondary" | "destructive" => {
-    if (percent >= 70) return 'default';
-    if (percent >= 35) return 'secondary';
+  const getUniquenessVariant = (state: 'green' | 'yellow' | 'red'): "default" | "secondary" | "destructive" => {
+    if (state === 'green') return 'default';
+    if (state === 'yellow') return 'secondary';
     return 'destructive';
+  };
+
+  const getStateMessage = (state: 'green' | 'yellow' | 'red') => {
+    if (state === 'green') return 'Code looks sufficiently unique. You can safely add it to the codebase.';
+    if (state === 'yellow') return 'This code is in the gray zone and requires manual review for potential plagiarism.';
+    return 'High risk of plagiarism or strong similarity detected. Please revise the code.';
   };
 
   if (loading) {
@@ -128,13 +145,14 @@ export const ResultsPanel = ({ result, nearestCode, loading, error, onClear }: R
 
   const uniquenessPercent = Math.round(result.uniqueness_percent * 100) / 100;
   const similarityPercent = Math.round(result.similarity * 10000) / 100;
+  const decisionState = getDecisionState(uniquenessPercent);
 
   return (
     <div className="h-[calc(100vh-160px)] flex flex-col">
       {/* Results Header */}
       <header className="shrink-0 flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
-          {getUniquenessIcon(uniquenessPercent)}
+          {getUniquenessIcon(decisionState)}
           <span className="text-lg font-semibold">Analysis Results</span>
         </div>
         {onClear && (
@@ -151,24 +169,45 @@ export const ResultsPanel = ({ result, nearestCode, loading, error, onClear }: R
         )}
       </header>
 
+      {codeChanged && (
+        <Card className="shrink-0 bg-warning/10 border-warning/30 mb-4">
+          <CardContent className="p-3">
+            <div className="flex items-center gap-2 text-sm text-warning">
+              <AlertTriangle className="h-4 w-4 shrink-0" />
+              <p>Code has been modified. Run check again before submission.</p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       <div className="flex-1 overflow-auto space-y-4">
         {/* Uniqueness Score */}
         <Card className="shrink-0 bg-gradient-card border-border shadow-card">
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center justify-between">
               Uniqueness Score
-              <Badge variant={getUniquenessVariant(uniquenessPercent)} className={getUniquenessColor(uniquenessPercent)}>
+              <Badge variant={getUniquenessVariant(decisionState)} className={getUniquenessColor(decisionState)}>
                 {uniquenessPercent.toFixed(1)}%
               </Badge>
             </CardTitle>
           </CardHeader>
-          <CardContent className="pt-0">
+          <CardContent className="pt-0 space-y-3">
             <div className="flex justify-between text-sm text-muted-foreground">
               <span>Similarity: {similarityPercent.toFixed(2)}%</span>
-              <span className={uniquenessPercent > 35 ? 'text-success' : 'text-destructive'}>
-                {uniquenessPercent > 35 ? 'Submittable' : 'Too similar'}
+              <span className={getUniquenessColor(decisionState)}>
+                {decisionState === 'green' ? 'Safe to submit' : decisionState === 'yellow' ? 'Needs review' : 'Too similar'}
               </span>
             </div>
+            {thresholds && (
+              <div className="pt-2 border-t border-border">
+                <p className={`text-sm ${getUniquenessColor(decisionState)}`}>
+                  {getStateMessage(decisionState)}
+                </p>
+                <div className="mt-2 text-xs text-muted-foreground">
+                  <p>Thresholds: Low ≤ {(thresholds.t_low * 100).toFixed(0)}% | High ≥ {(thresholds.t_high * 100).toFixed(0)}%</p>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
 

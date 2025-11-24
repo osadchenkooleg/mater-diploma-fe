@@ -6,8 +6,8 @@ import { Search, Send, Loader2 } from 'lucide-react';
 import { LanguageSelector } from '@/components/LanguageSelector';
 import { CodeInput } from '@/components/CodeInput';
 import { ResultsPanel } from '@/components/ResultsPanel';
-import { checkUniquenessFromText, getCodeById, saveCodeFromText, ApiError } from '@/lib/api';
-import { UniquenessResponse, CodeRecord } from '@/types/api';
+import { checkUniquenessFromText, getCodeById, saveCodeFromText, getCurrentThresholds, ApiError } from '@/lib/api';
+import { UniquenessResponse, CodeRecord, ThresholdsResponse } from '@/types/api';
 import { useToast } from '@/hooks/use-toast';
 
 const Index = () => {
@@ -18,21 +18,66 @@ const Index = () => {
   const [loadingCheck, setLoadingCheck] = useState(false);
   const [loadingSubmit, setLoadingSubmit] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [thresholds, setThresholds] = useState<ThresholdsResponse | null>(null);
+  const [thresholdsError, setThresholdsError] = useState<string | null>(null);
+  const [codeChanged, setCodeChanged] = useState(false);
   const { toast } = useToast();
 
-  const canCheck = selectedLang && codeText.trim().length > 0 && !loadingCheck;
-  const canSubmit = uniquenessResult && uniquenessResult.uniqueness_percent > 35 && !loadingSubmit;
+  const canCheck = selectedLang && codeText.trim().length > 0 && !loadingCheck && thresholds !== null;
+  
+  // Calculate submission eligibility based on thresholds
+  const getSubmissionState = (): 'green' | 'yellow' | 'red' | null => {
+    if (!uniquenessResult || !thresholds || codeChanged) return null;
+    const value = uniquenessResult.uniqueness_percent / 100; // Convert to 0-1 scale
+    if (value >= thresholds.t_high) return 'green';
+    if (value > thresholds.t_low) return 'yellow';
+    return 'red';
+  };
+  
+  const submissionState = getSubmissionState();
+  const canSubmit = submissionState === 'green' && !loadingSubmit;
+
+  // Fetch thresholds on mount
+  useEffect(() => {
+    const fetchThresholds = async () => {
+      try {
+        const data = await getCurrentThresholds();
+        setThresholds(data);
+      } catch (err) {
+        const errorMessage = err instanceof ApiError 
+          ? `Failed to load thresholds (${err.status}): ${err.message}`
+          : 'Failed to load thresholds. Check and Submit buttons will be disabled.';
+        setThresholdsError(errorMessage);
+        toast({
+          variant: "destructive",
+          title: "Thresholds unavailable",
+          description: errorMessage,
+        });
+      }
+    };
+
+    fetchThresholds();
+  }, [toast]);
 
   const clearAll = () => {
     setCodeText("");
     setUniquenessResult(null);
     setNearestCode(null);
     setError(null);
+    setCodeChanged(false);
     // Focus the editor after clearing
     requestAnimationFrame(() => {
       const textarea = document.querySelector('textarea');
       textarea?.focus();
     });
+  };
+
+  // Handle code changes - reset results and mark as changed
+  const handleCodeChange = (newCode: string) => {
+    setCodeText(newCode);
+    if (uniquenessResult) {
+      setCodeChanged(true);
+    }
   };
 
   // Keyboard shortcut handler
@@ -57,6 +102,7 @@ const Index = () => {
     setError(null);
     setUniquenessResult(null);
     setNearestCode(null);
+    setCodeChanged(false);
 
     try {
       const result = await checkUniquenessFromText(codeText.trim(), selectedLang);
@@ -158,6 +204,7 @@ const Index = () => {
                 onClick={handleCheckUniqueness}
                 disabled={!canCheck}
                 className="bg-gradient-primary hover:shadow-glow transition-all duration-200"
+                title={!thresholds ? 'Thresholds not loaded' : ''}
               >
                 {loadingCheck ? (
                   <>
@@ -172,6 +219,9 @@ const Index = () => {
                 )}
               </Button>
             </div>
+            {thresholdsError && (
+              <p className="text-xs text-destructive mt-2">{thresholdsError}</p>
+            )}
           </div>
         </div>
       </header>
@@ -185,7 +235,7 @@ const Index = () => {
             <CardContent className="p-6 h-full">
               <CodeInput
                 value={codeText}
-                onChange={setCodeText}
+                onChange={handleCodeChange}
                 disabled={loadingCheck || loadingSubmit}
                 placeholder={`Paste your ${selectedLang || 'code'} here or upload a file...`}
               />
@@ -201,12 +251,14 @@ const Index = () => {
               loading={loadingCheck}
               error={error}
               onClear={clearAll}
+              thresholds={thresholds}
+              codeChanged={codeChanged}
             />
           </aside>
         </div>
 
         {/* Submit Button */}
-        {uniquenessResult && (
+        {uniquenessResult && !codeChanged && (
           <div className="mt-6 flex justify-center">
             <div className="flex flex-col items-center gap-3">
               <Separator className="w-24" />
@@ -241,7 +293,13 @@ const Index = () => {
                     Submit to Codebase
                   </Button>
                   <p className="text-xs text-muted-foreground mt-2">
-                    Uniqueness must be above 35% to submit
+                    {submissionState === 'yellow' 
+                      ? 'Code is in gray zone and requires manual review'
+                      : submissionState === 'red'
+                      ? 'Uniqueness is too low to submit'
+                      : thresholds 
+                      ? `Uniqueness must be at least ${(thresholds.t_high * 100).toFixed(0)}% to submit`
+                      : 'Thresholds not loaded'}
                   </p>
                 </div>
               )}
