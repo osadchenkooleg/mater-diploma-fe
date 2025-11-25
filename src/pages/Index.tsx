@@ -28,7 +28,7 @@ const Index = () => {
   // Calculate submission eligibility based on thresholds
   const getSubmissionState = (): 'green' | 'yellow' | 'red' | null => {
     if (!uniquenessResult || !thresholds || codeChanged) return null;
-    const value = uniquenessResult.uniqueness_percent / 100; // Convert to 0-1 scale
+    const value = uniquenessResult.uniqueness_percent; // Use directly (0-1 scale)
     if (value >= thresholds.t_high) return 'green';
     if (value > thresholds.t_low) return 'yellow';
     return 'red';
@@ -121,7 +121,7 @@ const Index = () => {
 
       toast({
         title: "Analysis complete",
-        description: `Uniqueness: ${(result.uniqueness_percent).toFixed(1)}%`,
+        description: `Uniqueness: ${(result.uniqueness_percent * 100).toFixed(1)}%`,
       });
     } catch (err) {
       const errorMessage = err instanceof ApiError 

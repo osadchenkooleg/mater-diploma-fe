@@ -45,12 +45,11 @@ export const ResultsPanel = ({ result, nearestCode, loading, error, onClear, thr
     }
   };
 
-  // Calculate state based on thresholds
+  // Calculate state based on thresholds (value is 0-1 scale)
   const getDecisionState = (value: number): 'green' | 'yellow' | 'red' => {
     if (!thresholds) return 'red';
-    const normalizedValue = value / 100; // Convert to 0-1 scale
-    if (normalizedValue >= thresholds.t_high) return 'green';
-    if (normalizedValue > thresholds.t_low) return 'yellow';
+    if (value >= thresholds.t_high) return 'green';
+    if (value > thresholds.t_low) return 'yellow';
     return 'red';
   };
 
@@ -143,9 +142,10 @@ export const ResultsPanel = ({ result, nearestCode, loading, error, onClear, thr
     );
   }
 
-  const uniquenessPercent = Math.round(result.uniqueness_percent * 100) / 100;
+  // Use raw value (0-1 scale) for decision, multiply by 100 for display
+  const displayPercent = Math.round(result.uniqueness_percent * 10000) / 100;
   const similarityPercent = Math.round(result.similarity * 10000) / 100;
-  const decisionState = getDecisionState(uniquenessPercent);
+  const decisionState = getDecisionState(result.uniqueness_percent);
 
   return (
     <div className="h-[calc(100vh-160px)] flex flex-col">
@@ -187,7 +187,7 @@ export const ResultsPanel = ({ result, nearestCode, loading, error, onClear, thr
             <CardTitle className="text-base flex items-center justify-between">
               Uniqueness Score
               <Badge variant={getUniquenessVariant(decisionState)} className={getUniquenessColor(decisionState)}>
-                {uniquenessPercent.toFixed(1)}%
+                {displayPercent.toFixed(1)}%
               </Badge>
             </CardTitle>
           </CardHeader>
