@@ -45,11 +45,12 @@ export const ResultsPanel = ({ result, nearestCode, loading, error, onClear, thr
     }
   };
 
-  // Calculate state based on thresholds (value is 0-1 scale)
+  // Calculate state based on thresholds (uniqueness_percent is 0-100, thresholds are 0-1)
   const getDecisionState = (value: number): 'green' | 'yellow' | 'red' => {
     if (!thresholds) return 'red';
-    if (value >= thresholds.t_high) return 'green';
-    if (value > thresholds.t_low) return 'yellow';
+    const normalizedValue = value / 100; // Convert percent to 0-1 scale
+    if (normalizedValue >= thresholds.t_high) return 'green';
+    if (normalizedValue > thresholds.t_low) return 'yellow';
     return 'red';
   };
 
@@ -142,8 +143,8 @@ export const ResultsPanel = ({ result, nearestCode, loading, error, onClear, thr
     );
   }
 
-  // Use raw value (0-1 scale) for decision, multiply by 100 for display
-  const displayPercent = Math.round(result.uniqueness_percent * 10000) / 100;
+  // uniqueness_percent is already 0-100, use directly for display
+  const displayPercent = Math.round(result.uniqueness_percent * 100) / 100;
   const similarityPercent = Math.round(result.similarity * 10000) / 100;
   const decisionState = getDecisionState(result.uniqueness_percent);
 
