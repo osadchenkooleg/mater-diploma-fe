@@ -66,10 +66,10 @@ export const ResultsPanel = ({ result, nearestCode, loading, error, onClear, thr
     return <AlertCircle className="h-4 w-4" />;
   };
 
-  const getUniquenessVariant = (state: 'green' | 'yellow' | 'red'): "default" | "secondary" | "destructive" => {
-    if (state === 'green') return 'default';
-    if (state === 'yellow') return 'secondary';
-    return 'destructive';
+  const getBadgeStyles = (state: 'green' | 'yellow' | 'red') => {
+    if (state === 'green') return 'bg-green-500/20 text-green-400 border-green-500/30 font-bold';
+    if (state === 'yellow') return 'bg-amber-500/20 text-amber-300 border-amber-500/30 font-bold';
+    return 'bg-red-500/20 text-red-400 border-red-500/30 font-bold';
   };
 
   const getStateMessage = (state: 'green' | 'yellow' | 'red') => {
@@ -185,14 +185,17 @@ export const ResultsPanel = ({ result, nearestCode, loading, error, onClear, thr
         {/* Uniqueness Score */}
         <Card className="shrink-0 bg-gradient-card border-border shadow-card">
           <CardHeader className="pb-3">
-            <CardTitle className="text-base flex items-center justify-between">
+            <CardTitle className="text-lg flex items-center justify-between font-bold">
               Uniqueness Score
-              <Badge variant={getUniquenessVariant(decisionState)} className={getUniquenessColor(decisionState)}>
+              <Badge variant="outline" className={getBadgeStyles(decisionState)}>
                 {displayPercent.toFixed(1)}%
               </Badge>
             </CardTitle>
           </CardHeader>
           <CardContent className="pt-0 space-y-3">
+            <div className="text-xs text-muted-foreground italic border-l-2 border-primary/30 pl-3 py-1">
+              Decision is based on Uniqueness Score vs thresholds. Similarity is shown for reference.
+            </div>
             <div className="flex justify-between text-sm text-muted-foreground">
               <span>Similarity: {similarityPercent.toFixed(2)}%</span>
               <span className={getUniquenessColor(decisionState)}>
